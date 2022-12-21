@@ -32,6 +32,7 @@ import me.coley.cafedude.classfile.attribute.Attribute;
 import me.coley.cafedude.classfile.attribute.CodeAttribute;
 import me.coley.cafedude.classfile.attribute.InnerClassesAttribute;
 import me.coley.cafedude.classfile.attribute.InnerClassesAttribute.InnerClass;
+import me.coley.cafedude.classfile.attribute.SignatureAttribute;
 import me.coley.cafedude.classfile.constant.CpClass;
 import me.coley.cafedude.classfile.constant.CpFieldRef;
 import me.coley.cafedude.classfile.constant.CpNameType;
@@ -217,17 +218,35 @@ public class TTDeploy {
                     List<Field> fields = new ArrayList<>();
 
                     for (Field f : cf.getFields()) {
+                        List<Attribute> attributes = new ArrayList<>();
+                        for (Attribute a : f.getAttributes()) {
+                            if (a instanceof SignatureAttribute) {
+                                SignatureAttribute s = (SignatureAttribute) a;
+                                int signatureIndex = getUTFIndex(((CpUtf8) cf.getCp(s.getSignatureIndex())).getText(), cpUTF8, cp);
+                                int nameIndex = getUTFIndex("Signature", cpUTF8, cp);
+                                attributes.add(new SignatureAttribute(nameIndex, signatureIndex));
+                            }
+                        }
                         int nameIndex = getUTFIndex(((CpUtf8) cf.getCp(f.getNameIndex())).getText(), cpUTF8, cp);
                         int typeIndex = getUTFIndex(((CpUtf8) cf.getCp(f.getTypeIndex())).getText(), cpUTF8, cp);
-                        fields.add(new Field(new ArrayList<>(), f.getAccess(), nameIndex, typeIndex));
+                        fields.add(new Field(attributes, f.getAccess(), nameIndex, typeIndex));
                     }
 
                     List<Method> methods = new ArrayList<>();
 
                     for (Method m : cf.getMethods()) {
+                        List<Attribute> attributes = new ArrayList<>();
+                        for (Attribute a : m.getAttributes()) {
+                            if (a instanceof SignatureAttribute) {
+                                SignatureAttribute s = (SignatureAttribute) a;
+                                int signatureIndex = getUTFIndex(((CpUtf8) cf.getCp(s.getSignatureIndex())).getText(), cpUTF8, cp);
+                                int nameIndex = getUTFIndex("Signature", cpUTF8, cp);
+                                attributes.add(new SignatureAttribute(nameIndex, signatureIndex));
+                            }
+                        }
                         int nameIndex = getUTFIndex(((CpUtf8) cf.getCp(m.getNameIndex())).getText(), cpUTF8, cp);
                         int typeIndex = getUTFIndex(((CpUtf8) cf.getCp(m.getTypeIndex())).getText(), cpUTF8, cp);
-                        methods.add(new Method(new ArrayList<>(), m.getAccess(), nameIndex, typeIndex));
+                        methods.add(new Method(attributes, m.getAccess(), nameIndex, typeIndex));
                     }
 
                     List<Attribute> attributes = new ArrayList<>();
@@ -255,6 +274,11 @@ public class TTDeploy {
                                 innerClasses.add(new InnerClass(innerClassInfo, outerClassInfo, innerNameIndex, i.getInnerClassAccessFlags()));
                             }
                             attributes.add(new InnerClassesAttribute(nameIndex, innerClasses));
+                        } else if (a instanceof SignatureAttribute) {
+                            SignatureAttribute s = (SignatureAttribute) a;
+                            int signatureIndex = getUTFIndex(((CpUtf8) cf.getCp(s.getSignatureIndex())).getText(), cpUTF8, cp);
+                            int nameIndex = getUTFIndex("Signature", cpUTF8, cp);
+                            attributes.add(new SignatureAttribute(nameIndex, signatureIndex));
                         }
                     }
 
